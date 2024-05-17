@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+
+    environment {
+        YAML_FILE = 'config.yaml'
+        KEY_PATH = 'key2.subkey1'
+        NEW_VALUE = 'new_value'
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    echo 'Building project...'
+                    // Your build steps here
+                    // Example: sh 'make build'
+                }
+            }
+        }
+
+        stage('Update YAML') {
+            steps {
+                script {
+                    echo 'Updating YAML file...'
+                    // Run the sed command to update the YAML file
+                    sh '''
+                        # Extract the key and subkey from the KEY_PATH
+                        KEY_PATH=${KEY_PATH}
+                        KEY=${KEY_PATH%%.*}
+                        SUBKEY=${KEY_PATH#*.}
+
+                        # Use sed to update the nested YAML key with the new value
+                        sed -i -e "/${KEY}:/{:a;n;/^[[:space:]]*${SUBKEY}:/s/: .*/: ${NEW_VALUE}/;ta}" ${YAML_FILE}
+                    '''
+                }
+            }
+        }
+
+        stage('Purge Build') {
+            steps {
+                script {
+                    echo 'Cleaning up build artifacts...'
+                    // Your purge steps here
+                    // Example: sh 'make clean'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo 'Performing final cleanup...'
+                // Additional cleanup steps if necessary
+            }
+        }
+    }
+}
